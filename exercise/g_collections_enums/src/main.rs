@@ -9,15 +9,28 @@
 // - `Miss`
 //
 // You will need to complete 1b as well before you will be able to run this program successfully.
+#[derive(Debug)]
+enum Shot {
+    Bullseye,
+    Hit(f64),
+    Miss,
+}
 
 impl Shot {
     // Here is a method for the `Shot` enum you just defined.
-    fn points(self) -> i32 {
+    fn points(&self) -> i32 { // ! (2)this was not a &self 
         // 1b. Implement this method to convert a Shot into points
         // - return 5 points if `self` is a `Shot::Bullseye`
         // - return 2 points if `self` is a `Shot::Hit(x)` where x < 3.0
         // - return 1 point if `self` is a `Shot::Hit(x)` where x >= 3.0
         // - return 0 points if `self` is a Miss
+        match &self {
+            Shot::Bullseye => 5,
+            Shot::Miss => 0,
+            Shot::Hit(x) if x < &3.0 => 2, // ! (3) had to make 3.0 as &3.0 as well for same reason
+            Shot::Hit(x) if x >= &3.0 => 1,
+            Shot::Hit(_) => -1,
+        }
     }
 }
 
@@ -34,11 +47,24 @@ fn main() {
     //      - Less than 1.0 -- `Shot::Bullseye`
     //      - Between 1.0 and 5.0 -- `Shot::Hit(value)`
     //      - Greater than 5.0 -- `Shot::Miss`
-
+    for arrow_coord in arrow_coords {
+        arrow_coord.print_description();
+        let distance: f64 = arrow_coord.distance_from_center();
+        let variant: Option<Shot> = match distance {
+            d if d < 1.0 => Some(Shot::Bullseye),
+            d if d > 1.0 && d < 5.0 => Some(Shot::Hit(d)),
+            d if d > 5.0 => Some(Shot::Miss),
+            _ => None,
+        };
+        shots.push(variant.expect("Invalid Shot Type"))
+    }
 
     let mut total = 0;
     // 3. Finally, loop through each shot in shots and add its points to total
-
+    for shot in &shots {
+        total += Shot::points(shot);
+    }
+    println!("Printing Shots {:?}", shots); // ! (1) Wanted to print shots after they ahve been used to calculate total, but couldn't cause (2)
     println!("Final point total is: {}", total);
 }
 
@@ -58,9 +84,9 @@ impl Coord {
             "coord is {:.1} away, at ({:.1}, {:.1})",
             self.distance_from_center(),
             self.x,
-            self.y);
+            self.y
+        );
     }
-
 }
 
 // Generate some random coordinates
