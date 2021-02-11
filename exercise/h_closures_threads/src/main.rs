@@ -53,6 +53,7 @@ fn main() {
     // Time for some fun with threads and channels!  Though there is a primitive type of channel
     // in the std::sync::mpsc module, I recommend always using channels from the crossbeam crate,
     // which is what we will use here.
+    
     // 4. Uncomment the block comment below (Find and remove the `/*` and `*/`).  Examine how the
     // flow of execution works.  Once you understand it, alter the values passed to the `pause_ms()`
     // calls so that both the "Thread B" outputs occur before the "Thread A" outputs.
@@ -97,21 +98,32 @@ fn main() {
     // the child threads.
 
     let (tx_challenge, rx_challenge) = channel::unbounded();
-    let rx_challenge_clone = rx_challenge.clone();
-    tx_challenge.send("1");
-    tx_challenge.send("2");
-    let handle_a_child = std::thread::spawn(move || {
+
+    let rx_clone_1 = rx_challenge.clone();
+
+    tx_challenge.send("hahah").unwrap();
+    tx_challenge.send("1").unwrap();
+    tx_challenge.send("2").unwrap();
+    let handle_child_1 = thread::spawn(move || {
         for msg in rx_challenge {
-            println!("from a child: {}", msg);
+            println!("handle_child_1 Message from main thread: {}", msg);
         }
+        
     });
-    tx_challenge.send("3");
-    tx_challenge.send("4");
-    let handle_b_child = std::thread::spawn(move || {
-        for msg in rx_challenge_clone {
-            println! {"from child b: {}", msg}
+    pause_ms(5000);
+    tx_challenge.send("3").unwrap();
+    tx_challenge.send("4").unwrap();
+    let handle_child_2 = thread::spawn(move || {
+        for msg in rx_clone_1 {
+            println!(
+                "handle_child_2 rx_clone_1 Message from main thread: {}",
+                msg
+            );
         }
     });
     drop(tx_challenge);
+    handle_child_1.join().unwrap();
+    handle_child_2.join().unwrap();
+
     println!("Main thread: Exiting.")
 }
